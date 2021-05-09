@@ -49,19 +49,27 @@ def get_angles_radians(filename):
     yaw, pitch, roll = matrix_to_angles(matrix_values)
     return yaw, pitch, roll
 
+
 def get_angles_degrees(filename):
     return list(map(math.degrees, get_angles_radians(filename)))
 
 
-def show_pose(filename):
-    print('%.2f,%.2f,%.2f' % (tuple(get_angles_degrees(filename))))
+def show_pose(filename, format):
+    yaw, pitch, roll = get_angles_degrees(filename)
+    if format == 'json':
+        print(json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll}))
+    elif format == 'short':
+        print('%.2f,%.2f,%.2f' % (yaw, pitch, roll))
+    else:
+        print('Yaw: %.2f\nPitch: %.2f\nRoll: %.2f' % (yaw, pitch, roll))
 
 
 def main():
     parser = argparse.ArgumentParser(description='Display yaw, pitch, roll angles in degrees, extracted from EXIF')
     parser.add_argument('image', metavar='IMAGE')
+    parser.add_argument('--format', '-f', choices=['json', 'short'])
     conf = parser.parse_args()
-    show_pose(conf.image)
+    show_pose(conf.image, format=conf.format)
 
 if __name__ == '__main__':
     main()
