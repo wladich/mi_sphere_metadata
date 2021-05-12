@@ -54,14 +54,19 @@ def get_angles_degrees(filename):
     return list(map(math.degrees, get_angles_radians(filename)))
 
 
-def show_pose(filename, format):
+def show_pose(filename, fmt):
     yaw, pitch, roll = get_angles_degrees(filename)
-    if format == 'json':
+    if fmt == 'json':
         print(json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll}))
-    elif format == 'short':
+    elif fmt == 'short':
         print('%.2f,%.2f,%.2f' % (yaw, pitch, roll))
     else:
         print('Yaw: %.2f\nPitch: %.2f\nRoll: %.2f' % (yaw, pitch, roll))
+
+
+def panoedit_metadata_plugin(filename):
+    yaw, pitch, roll = get_angles_degrees(filename)
+    return {'pose': {'yaw': yaw, 'pitch': pitch, 'roll': roll}}
 
 
 def main():
@@ -69,7 +74,7 @@ def main():
     parser.add_argument('image', metavar='IMAGE')
     parser.add_argument('--format', '-f', choices=['json', 'short'])
     conf = parser.parse_args()
-    show_pose(conf.image, format=conf.format)
+    show_pose(conf.image, fmt=conf.format)
 
 if __name__ == '__main__':
     main()
