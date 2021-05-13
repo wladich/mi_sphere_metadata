@@ -2,20 +2,19 @@
 import argparse
 import struct
 import math
-import binascii
-import subprocess
 import json
 
 
 def read_matrix_data(filename):
-    res = subprocess.check_output(['exiftool', '-b', '-j', '-UserComment', filename])
-    data = json.loads(res)[0]['UserComment']
-    prefix = 'base64:'
-    assert data.startswith(prefix)
-    data = data[len(prefix):]
-    data = binascii.a2b_base64(data)
-    assert len(data) == 36
-    return data
+    with open(filename, 'rb') as f:
+        b = f.read(100000)
+        tag_start = bytes([0x86, 0x92, 0x07, 0, 0x24, 0, 0, 0])
+        i = b.find(tag_start)
+        if i == -1:
+            raise Exception('Mi Sphere rotation matrix not found in file %s' % filename)
+        tag_data_offset_position = i + len(tag_start)
+        offset = struct.unpack('<I', b[tag_data_offset_position:tag_data_offset_position + 4])[0]
+        return b[offset + 12: offset + 12 + 36]
 
 
 def decode_matrix(data):
