@@ -21,14 +21,6 @@ def decode_matrix(data):
     return list(struct.unpack('f' * 9, data))
 
 
-def correct_matrix(mat):
-    """Corrects matrix in place to produce angles compatible with Panellum and MiSphereConverter"""
-    mat[1] *= -1
-    mat[3] *= -1
-    mat[5] *= -1
-    mat[7] *= -1
-
-
 def matrix_to_angles(ar):
     """Calculates angles in radians"""
     # rz * ry * rx
@@ -53,7 +45,6 @@ def matrix_to_angles(ar):
 def get_angles_radians(filename):
     matrix_data = read_matrix_data(filename)
     matrix_values = decode_matrix(matrix_data)
-    correct_matrix(matrix_values)
     yaw, pitch, roll = matrix_to_angles(matrix_values)
     return yaw, pitch, roll
 
