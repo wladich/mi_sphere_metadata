@@ -53,14 +53,22 @@ def get_angles_degrees(filename):
     return list(map(math.degrees, get_angles_radians(filename)))
 
 
-def show_pose(filename, fmt):
-    yaw, pitch, roll = get_angles_degrees(filename)
+def show_pose(angles, fmt):
+    yaw, pitch, roll = angles
     if fmt == 'json':
         print(json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll}))
     elif fmt == 'short':
         print('%.2f,%.2f,%.2f' % (yaw, pitch, roll))
     else:
         print('Yaw: %.2f\nPitch: %.2f\nRoll: %.2f' % (yaw, pitch, roll))
+
+
+def write_sidecar_file(image_filename, angles):
+    yaw, pitch, roll = angles
+    sidecar_filename = image_filename + '.pose.json'
+    serialized = json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll})
+    with open(sidecar_filename, 'w') as f:
+        f.write(serialized)
 
 
 def panoedit_metadata_plugin(filename):
@@ -72,8 +80,18 @@ def main():
     parser = argparse.ArgumentParser(description='Display yaw, pitch, roll angles in degrees, extracted from EXIF')
     parser.add_argument('image', metavar='IMAGE')
     parser.add_argument('--format', '-f', choices=['json', 'short'])
+    parser.add_argument('--sidecar', nargs='?', const=True,
+                        help='Write pose to sidecar file. Provide image name to write sidecar with angles from IMAGE')
     conf = parser.parse_args()
-    show_pose(conf.image, fmt=conf.format)
+    angles = get_angles_degrees(conf.image)
+    show_pose(angles, fmt=conf.format)
+    if conf.sidecar is not None:
+        if conf.sidecar is True:
+            sidecar_for_file = conf.image
+        else:
+            sidecar_for_file = conf.sidecar
+        write_sidecar_file(sidecar_for_file, angles)
+
 
 if __name__ == '__main__':
     main()
