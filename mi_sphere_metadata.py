@@ -11,7 +11,7 @@ def read_matrix_data(filename):
         tag_start = bytes([0x86, 0x92, 0x07, 0, 0x24, 0, 0, 0])
         i = b.find(tag_start)
         if i == -1:
-            raise Exception('Mi Sphere rotation matrix not found in file %s' % filename)
+            return None
         tag_data_offset_position = i + len(tag_start)
         offset = struct.unpack('<I', b[tag_data_offset_position:tag_data_offset_position + 4])[0]
         return b[offset + 12: offset + 12 + 36]
@@ -44,13 +44,18 @@ def matrix_to_angles(ar):
 
 def get_angles_radians(filename):
     matrix_data = read_matrix_data(filename)
+    if matrix_data is None:
+        return None
     matrix_values = decode_matrix(matrix_data)
     yaw, pitch, roll = matrix_to_angles(matrix_values)
     return yaw, pitch, roll
 
 
 def get_angles_degrees(filename):
-    return list(map(math.degrees, get_angles_radians(filename)))
+    angles_radians = get_angles_radians(filename)
+    if angles_radians is None:
+        return None
+    return list(map(math.degrees, angles_radians))
 
 
 def show_pose(angles, fmt):
@@ -72,7 +77,10 @@ def write_sidecar_file(image_filename, angles):
 
 
 def panoedit_metadata_plugin(filename):
-    yaw, pitch, roll = get_angles_degrees(filename)
+    angles_degrees = get_angles_degrees(filename)
+    if angles_degrees is None:
+        return None
+    yaw, pitch, roll = angles_degrees
     return {'pose': {'yaw': yaw, 'pitch': pitch, 'roll': roll}}
 
 
@@ -84,6 +92,9 @@ def main():
                         help='Write pose to sidecar file. Provide image name to write sidecar with angles from IMAGE')
     conf = parser.parse_args()
     angles = get_angles_degrees(conf.image)
+    if angles is None:
+        print('Mi Sphere rotation matrix not found in file %s' % conf.image)
+        exit(1)
     show_pose(angles, fmt=conf.format)
     if conf.sidecar is not None:
         if conf.sidecar is True:
