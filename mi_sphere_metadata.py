@@ -1,35 +1,40 @@
 #!/usr/bin/env python3
 import argparse
-import struct
-import math
 import json
+import math
+import struct
+import sys
 
 
 def read_matrix_data(filename):
-    with open(filename, 'rb') as f:
-        b = f.read(100000)
+    with open(filename, "rb") as f:
+        buf = f.read(100000)
         tag_start = bytes([0x86, 0x92, 0x07, 0, 0x24, 0, 0, 0])
-        i = b.find(tag_start)
-        if i == -1:
+        tag_pos = buf.find(tag_start)
+        if tag_pos == -1:
             return None
-        tag_data_offset_position = i + len(tag_start)
-        offset = struct.unpack('<I', b[tag_data_offset_position:tag_data_offset_position + 4])[0]
-        return b[offset + 12: offset + 12 + 36]
+        tag_data_offset_position = tag_pos + len(tag_start)
+        offset = struct.unpack(
+            "<I", buf[tag_data_offset_position : tag_data_offset_position + 4]
+        )[0]
+        return buf[offset + 12 : offset + 12 + 36]
 
 
 def decode_matrix(data):
-    return list(struct.unpack('f' * 9, data))
+    return list(struct.unpack("f" * 9, data))
 
 
 def matrix_to_angles(ar):
-    """Calculates angles in radians"""
-    # rz * ry * rx
-    # ⎡cos(y)⋅cos(z)  sin(x)⋅sin(y)⋅cos(z) - sin(z)⋅cos(x)  sin(x)⋅sin(z) + sin(y)⋅cos(x)⋅cos(z) ⎤
-    # ⎢                                                                                          ⎥
-    # ⎢sin(z)⋅cos(y)  sin(x)⋅sin(y)⋅sin(z) + cos(x)⋅cos(z)  -sin(x)⋅cos(z) + sin(y)⋅sin(z)⋅cos(x)⎥
-    # ⎢                                                                                          ⎥
-    # ⎣   -sin(y)                sin(x)⋅cos(y)                          cos(x)⋅cos(y)            ⎦
-    r11, r12, r13, r21, r22, r23, r31, r32, r33 = ar
+    """Calculates angles in radians
+     rz * ry * rx
+    ⎡cos(y)⋅cos(z)  sin(x)⋅sin(y)⋅cos(z) - sin(z)⋅cos(x)  sin(x)⋅sin(z) + sin(y)⋅cos(x)⋅cos(z) ⎤
+    ⎢                                                                                          ⎥
+    ⎢sin(z)⋅cos(y)  sin(x)⋅sin(y)⋅sin(z) + cos(x)⋅cos(z)  -sin(x)⋅cos(z) + sin(y)⋅sin(z)⋅cos(x)⎥
+    ⎢                                                                                          ⎥
+    ⎣   -sin(y)                sin(x)⋅cos(y)                          cos(x)⋅cos(y)            ⎦
+    """
+    # pylint: disable=C0103
+    r11, _r12, _r13, r21, r22, r23, r31, r32, r33 = ar
     cy = math.sqrt(r11 * r11 + r21 * r21)
     if cy > 1e-6:
         x = math.atan2(r32, r33)
@@ -60,19 +65,19 @@ def get_angles_degrees(filename):
 
 def show_pose(angles, fmt):
     yaw, pitch, roll = angles
-    if fmt == 'json':
-        print(json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll}))
-    elif fmt == 'short':
-        print('%.2f,%.2f,%.2f' % (yaw, pitch, roll))
+    if fmt == "json":
+        print(json.dumps({"yaw": yaw, "pitch": pitch, "roll": roll}))
+    elif fmt == "short":
+        print("%.2f,%.2f,%.2f" % (yaw, pitch, roll))
     else:
-        print('Yaw: %.2f\nPitch: %.2f\nRoll: %.2f' % (yaw, pitch, roll))
+        print("Yaw: %.2f\nPitch: %.2f\nRoll: %.2f" % (yaw, pitch, roll))
 
 
 def write_sidecar_file(image_filename, angles):
     yaw, pitch, roll = angles
-    sidecar_filename = image_filename + '.pose.json'
-    serialized = json.dumps({'yaw': yaw, 'pitch': pitch, 'roll': roll})
-    with open(sidecar_filename, 'w') as f:
+    sidecar_filename = image_filename + ".pose.json"
+    serialized = json.dumps({"yaw": yaw, "pitch": pitch, "roll": roll})
+    with open(sidecar_filename, "w", encoding="ascii") as f:
         f.write(serialized)
 
 
@@ -81,20 +86,28 @@ def panoedit_metadata_plugin(filename):
     if angles_degrees is None:
         return None
     yaw, pitch, roll = angles_degrees
-    return {'pose': {'yaw': yaw, 'pitch': pitch, 'roll': roll}}
+    return {"pose": {"yaw": yaw, "pitch": pitch, "roll": roll}}
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Display yaw, pitch, roll angles in degrees, extracted from EXIF')
-    parser.add_argument('image', metavar='IMAGE')
-    parser.add_argument('--format', '-f', choices=['json', 'short'])
-    parser.add_argument('--sidecar', nargs='?', const=True,
-                        help='Write pose to sidecar file. Provide image name to write sidecar with angles from IMAGE')
+    parser = argparse.ArgumentParser(
+        description="Display yaw, pitch, roll angles in degrees, extracted from EXIF"
+    )
+    parser.add_argument("image", metavar="IMAGE")
+    parser.add_argument("--format", "-f", choices=["json", "short"])
+    parser.add_argument(
+        "--sidecar",
+        nargs="?",
+        const=True,
+        help=(
+            "Write pose to sidecar file. "
+            "Provide image name to write sidecar with angles from IMAGE"
+        ),
+    )
     conf = parser.parse_args()
     angles = get_angles_degrees(conf.image)
     if angles is None:
-        print('Mi Sphere rotation matrix not found in file %s' % conf.image)
-        exit(1)
+        sys.exit("Mi Sphere rotation matrix not found in file %s" % conf.image)
     show_pose(angles, fmt=conf.format)
     if conf.sidecar is not None:
         if conf.sidecar is True:
@@ -104,5 +117,5 @@ def main():
         write_sidecar_file(sidecar_for_file, angles)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
