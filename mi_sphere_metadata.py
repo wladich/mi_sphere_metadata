@@ -6,7 +6,7 @@ import struct
 import sys
 from typing import Literal, NamedTuple, TypeAlias, cast
 
-from panoedit import PosePluginResult
+from panoedit.plugins.pose_plugin import PosePluginResult
 
 Matrix: TypeAlias = tuple[float, float, float, float, float, float, float, float, float]
 
