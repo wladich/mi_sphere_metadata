@@ -6,11 +6,11 @@ BASE="$(dirname $0)"
 cd "$BASE"
 
 echo 'pylint...'
-pylint ./*.py
+pylint ./*.py tests/*.py
 echo 'Black...'
-black --diff --check -q ./*.py
+black --diff --check -q ./*.py tests/*.py
 echo 'flake8...'
-flake8 *.py
+flake8 *.py tests/*.py
 echo 'mypy...'
 mypy
 
