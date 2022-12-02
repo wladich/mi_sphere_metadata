@@ -41,4 +41,4 @@ venv:
 	SETUPTOOLS_ENABLE_FEATURES="legacy-editable" $(path)/bin/pip install -e ".[test]"
 
 clean:
-	rm -rf ./mypy_cache ./*.egg-info ./.mypy_cache ./__pycache__ ./.pytest_cache ./venv
+	rm -rf ./mypy_cache ./*.egg-info ./.mypy_cache ./__pycache__ ./.pytest_cache ./venv ./build
