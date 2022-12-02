@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from mi_sphere_metadata import main, panoedit_metadata_plugin
+from mi_sphere_metadata import PoseDegrees, get_angles_degrees, main
 
 
 @pytest.fixture(name="image_filename")
@@ -49,15 +49,12 @@ def test_cli_invalid_image(invalid_image_filename: str) -> None:
         main()
 
 
-def test_plugin(image_filename: str) -> None:
-    expected = {
-        "pose": {
-            "pitch": 6.693635141483578,
-            "roll": 3.657116846804307,
-        }
-    }
-    assert panoedit_metadata_plugin(image_filename) == expected
+def test_get_angles(image_filename: str) -> None:
+    expected = PoseDegrees(
+        pitch=6.693635141483578, roll=3.657116846804307, yaw=-179.5305064389227
+    )
+    assert get_angles_degrees(image_filename) == expected
 
 
-def test_plugin_with_invalid_image(invalid_image_filename: str) -> None:
-    assert panoedit_metadata_plugin(invalid_image_filename) is None
+def test_get_angles_from_invalid_image(invalid_image_filename: str) -> None:
+    assert get_angles_degrees(invalid_image_filename) is None

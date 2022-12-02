@@ -6,8 +6,6 @@ import struct
 import sys
 from typing import Literal, NamedTuple, TypeAlias, cast
 
-from panoedit.plugins.pose_plugin import PosePluginResult
-
 Matrix: TypeAlias = tuple[float, float, float, float, float, float, float, float, float]
 
 
@@ -104,13 +102,6 @@ def write_sidecar_file(image_filename: str, pose: PoseDegrees) -> None:
     serialized = json.dumps(sidecar_data)
     with open(sidecar_filename, "w", encoding="ascii") as f:
         f.write(serialized)
-
-
-def panoedit_metadata_plugin(filename: str) -> PosePluginResult | None:
-    angles_degrees = get_angles_degrees(filename)
-    if angles_degrees is None:
-        return None
-    return {"pose": {"pitch": angles_degrees.pitch, "roll": angles_degrees.roll}}
 
 
 class Args(argparse.Namespace):
