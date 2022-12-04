@@ -24,16 +24,16 @@ help:
 	@echo "$$help"
 
 pylint:
-	pylint ./*.py tests
+	pylint . --recursive y
 
 black:
-	black --diff --check -q ./*.py tests
+	black --diff --check -q .
 
 flake8:
-	flake8 *.py tests
+	flake8 .
 
 test:
-	pytest tests
+	pytest
 
 mypy:
 	mypy .
