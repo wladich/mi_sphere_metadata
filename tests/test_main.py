@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from mi_sphere_metadata import PoseDegrees, get_angles_degrees, main
+from mi_sphere_metadata.metadata import PoseDegrees, get_angles_degrees, main
 
 
 @pytest.fixture(name="image_filename")
